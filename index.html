@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مهمة فك الشيفرة</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>مهمة فك الشيفرة</h1>
+    
+    <!-- المرحلة الأولى -->
+    <div class="stage" id="stage1">
+      <h2>السؤال 1: فك التشفير باستخدام شفرة قيصر</h2>
+      <p>"KHOOR" باستخدام المفتاح 3</p>
+      <input type="text" id="answer1" placeholder="أدخل الإجابة هنا">
+      <button onclick="checkAnswer1()">التالي</button>
+    </div>
+    
+    <!-- المرحلة الثانية -->
+    <div class="stage" id="stage2" style="display:none;">
+      <h2>السؤال 2: عملية XOR</h2>
+      <p>عندك الأرقام التالية: <br> 
+        1011, 1100, 0001<br>
+        ما هي الكلمة التي يتم استخراجها بعد تنفيذ عملية XOR بين الأرقام باستخدام النمط التالي 1111؟<br> 
+        <br> 
+        0100 = Y <br>
+        0011 = U <br>
+        0110 = A <br>
+        1110 = O <br>
+      </p>
+      <input type="text" id="answer2" placeholder="أدخل الإجابة هنا">
+      <button onclick="checkAnswer2()">التالي</button>
+    </div>
+
+    <!-- المرحلة الثالثة -->
+    <div class="stage" id="stage3" style="display:none;">
+      <h2>السؤال 3: عملية حسابية بين المصفوفات</h2>
+      <p>إذا كانت الحروف التالية ممثلة بالأرقام:<br>
+        R = 8, A = 5, E = 12, W = 9, T = 15<br>
+        وتم تطبيق عملية حسابية بين المصفوفات:<br>
+        [4 1 7]<br>
+        [1 7 5]<br>
+        ما هي الكلمة التي تمثل الأرقام الناتجة؟
+      </p>
+      <input type="text" id="answer3" placeholder="أدخل الإجابة هنا">
+      <button onclick="checkAnswer3()">التالي</button>
+    </div>
+
+    <!-- المرحلة الرابعة -->
+    <div class="stage" id="stage4" style="display:none;">
+      <h2>السؤال 4: معادلة جبرية</h2>
+      <p>إذا كانت المعادلات التالية صحيحة:<br>
+        A = B + C<br>
+        حيث:<br>
+        C = 3<br> 
+        A = 4 + 2C<br>
+        B = B - 2C<br>
+        ما هي قيمة B؟
+      </p>
+      <input type="number" id="answer4" placeholder="أدخل الإجابة هنا">
+      <button onclick="checkAnswer4()">التالي</button>
+    </div>
+
+    <!-- المرحلة الخامسة -->
+    <div class="stage" id="stage5" style="display:none;">
+      <h2>السؤال 5: شيفرة مورس</h2>
+      <p>إذا كانت الرموز التالية تمثل حروفًا باستخدام الشيفرة مورس:<br>
+        .. = I<br>
+        ..-. = E<br>
+        -. = N<br>
+        . = F<br>
+        --- = O<br>
+        .-- = W<br>
+        ما هي الكلمة المناسبة المكونة من هذه الحروف؟<br>
+        .. <br>
+        .-- <br>
+        -. <br>
+      </p>
+      <input type="text" id="answer5" placeholder="أدخل الإجابة هنا">
+      <button onclick="checkAnswer5()">التالي</button>
+    </div>
+
+    <!-- رسالة الفوز -->
+    <div id="winnerMessage" style="display:none;">
+      <h2>We have a winner!</h2>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
