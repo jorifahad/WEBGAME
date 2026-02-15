@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Question</title>
+  <style>
+    :root{
+      --bg:#06060a;
+      --card:rgba(15,15,22,.65);
+      --border:rgba(255,255,255,.10);
+      --text:#f2f2fb;
+      --muted:#b7b7c9;
+      --yes:#2ee59d;
+      --no:#ff4d6d;
+      --pink:#ff2f92; /* single color */
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .center{height:100%;display:grid;place-items:center}
+    .card{
+      width:min(92vw,560px);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:26px 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      position:relative;
+      overflow:hidden;
+    }
+    h1{margin:0 0 8px;color:var(--text);font-size:22px;line-height:1.35}
+    p{margin:0 0 18px;color:var(--muted);font-size:14px}
+
+    .btns{position:relative;height:120px;margin-top:10px}
+    button{
+      border:0;border-radius:14px;padding:12px 18px;
+      font-weight:800;cursor:pointer;color:#081016;font-size:15px;
+      transition: transform .12s ease, filter .12s ease;
+      user-select:none;-webkit-tap-highlight-color: transparent;
+    }
+    button:active{transform: scale(.98)}
+    #yes{
+      background:var(--yes);
+      box-shadow: 0 10px 26px rgba(46,229,157,.25);
+      position:absolute;right:18px;top:18px;min-width:120px;
+    }
+    #no{
+      background:var(--no);
+      box-shadow: 0 10px 26px rgba(255,77,109,.22);
+      position:absolute;left:18px;top:18px;min-width:120px;
+    }
+    .hint{margin-top:10px;font-size:12px;color:#9b9bb1}
+
+    .screen{display:none}
+    .screen.active{display:block}
+
+    #canvasWrap{display:grid;place-items:center;padding:14px 0 6px}
+    canvas{width:min(92vmin,760px);height:auto;border-radius:18px;background:transparent}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+    .topbar .tag{font-size:12px;color:#a6a6bd}
+    .topbar button{
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      font-weight:700;padding:10px 12px;border-radius:12px;box-shadow:none;
+    }
+    .topbar button:hover{filter:brightness(1.06)}
+  </style>
+</head>
+<body>
+  <div class="center">
+
+    <div class="card screen active" id="qScreen">
+      <h1>Quick question</h1>
+      <p>Is your sister the best programmer?</p>
+
+      <div class="btns" id="arena">
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+      </div>
+
+      <div class="hint">Try pressing "No".</div>
+    </div>
+
+    <div class="card screen" id="heartScreen">
+      <h1>Correct choice</h1>
+      <p>Rendering...</p>
+
+      <div id="canvasWrap">
+        <canvas id="c" width="900" height="900"></canvas>
+      </div>
+
+      <div class="topbar">
+        <span class="tag">Canvas animation</span>
+        <div style="display:flex;gap:8px">
+          <button id="restartHeart">Restart</button>
+          <button id="back">Back</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+(() => {
+  const qScreen = document.getElementById("qScreen");
+  const heartScreen = document.getElementById("heartScreen");
+  const arena = document.getElementById("arena");
+  const btnNo = document.getElementById("no");
+  const btnYes = document.getElementById("yes");
+  const btnBack = document.getElementById("back");
+  const btnRestart = document.getElementById("restartHeart");
+
+  // ---------------------------
+  // No button runs away (IMPOSSIBLE MODE)
+  // ---------------------------
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  function teleportNo(){
+    const a = arena.getBoundingClientRect();
+    const b = btnNo.getBoundingClientRect();
+    const pad = 10;
+
+    const maxX = a.width  - b.width  - pad;
+    const maxY = a.height - b.height - pad;
+
+    const newLeft = clamp(Math.random() * maxX, pad, maxX);
+    const newTop  = clamp(Math.random() * maxY, pad, maxY);
+
+    btnNo.style.left = newLeft + "px";
+    btnNo.style.top  = newTop  + "px";
+  }
+
+  // Strict distance: if cursor is close -> teleport immediately
+  const THRESHOLD = 190; // increase => more impossible (220), decrease => less (150)
+
+  window.addEventListener("mousemove", (e) => {
+    const b = btnNo.getBoundingClientRect();
+    const cx = b.left + b.width / 2;
+    const cy = b.top  + b.height / 2;
+    const dist = Math.hypot(cx - e.clientX, cy - e.clientY);
+
+    if (dist < THRESHOLD) teleportNo();
+  }, { passive:true });
+
+  // Mobile: any attempt to touch -> teleport
+  btnNo.addEventListener("touchstart", (e) => {
+    teleportNo();
+    e.preventDefault();
+  }, { passive:false });
+
+  // Place it somewhere random at start (so it isn't easy)
+  teleportNo();
+
+  // ---------------------------
+  // YES -> heart
+  // ---------------------------
+  btnYes.addEventListener("click", () => {
+    qScreen.classList.remove("active");
+    heartScreen.classList.add("active");
+    startHeart();
+  });
+
+  btnBack.addEventListener("click", () => {
+    heartScreen.classList.remove("active");
+    qScreen.classList.add("active");
+  });
+
+  btnRestart.addEventListener("click", () => startHeart());
+
+  // =========================================================
+  // Heart (MATCH Turtle style)
+  // - Same math as your screenshot
+  // - Draw from center to heart point (string/rays)
+  // - Line-by-line slow
+  // =========================================================
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d", { alpha:false });
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const COLOR = getComputedStyle(document.documentElement).getPropertyValue("--pink").trim() || "#f73487";
+
+  let timer = null;
+
+  // Slow speed: bigger = slower
+  const DELAY_MS = 8;   // 12 / 16 slower
+  const N = 6000;       // like turtle range(6000)
+  const K_STEP = 0.02;  // controls "density" (0.015..0.04 are good)
+
+  function heart1(k){ return 15 * Math.sin(k) ** 3; }
+  function heart2(k){
+    return 12*Math.cos(k) - 5*Math.cos(2*k) - 2*Math.cos(3*k) - Math.cos(4*k);
+  }
+
+  function clearBG(){
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = "#06060a";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+  }
+
+  function startHeart(){
+    if (timer) { clearInterval(timer); timer = null; }
+
+    const base = 900;
+    canvas.width = base * dpr;
+    canvas.height = base * dpr;
+
+    // center + y up
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.translate(base/2, base/2);
+    ctx.scale(1,-1);
+
+    clearBG();
+
+    // styling (single color, a bit of depth)
+    ctx.lineCap = "round";
+    ctx.strokeStyle = COLOR;
+
+    const SCALE = 20; // like your turtle: heart1(i)*20, heart2(i)*20
+
+    let i = 0;
+
+    // Draw ONE "ray" per tick (line-by-line)
+    timer = setInterval(() => {
+      if (i >= N) { clearInterval(timer); timer = null; return; }
+
+      const k = i * K_STEP;
+
+      const x = heart1(k) * SCALE;
+      const y = heart2(k) * SCALE;
+
+      // soft under-stroke
+      ctx.globalAlpha = 0.15;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      // crisp stroke
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
+
+      i++;
+    }, DELAY_MS);
+  }
+
+})();
+</script>
+</body>
+</html>
